@@ -1,6 +1,6 @@
 const int joyX = A0;
 const int joyY = A1;
-const int joyS = 5;
+const int joyS = 4;
 int xValRaw;
 int yValRaw;
 int xVal;
