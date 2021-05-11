@@ -1,3 +1,4 @@
+#include <FastLED.h>
 #include <Servo.h>
 
 // declare constants
@@ -8,17 +9,25 @@ const int joyYPin = A3;
 const int switchPin = 8;
 const int printEvery = 500;
 const int tiltMin = 10;
-const int tiltLim = 135;
+const int tiltMax = 135;
 const int panMin = 10;
-const int panLim = 170;
+const int panMax = 170;
 int joyX, joyY;
 long currentTime;
 long prevTime;
 int tiltPos;
 int panPos;
 boolean manualMode;
+float tiltNoiseValue;
+float panNoiseValue;
 
-
+// the noise variables
+float tiltOffset = random(1000); //start with random seed
+float panOffset = random(1000);
+float tiltIncrement = 1;
+float panIncrement = 5;
+int noiseMin = 50;
+int noiseMax = 190;
 // declare Servos
 Servo tilt;
 Servo pan;
@@ -36,19 +45,44 @@ void setup() {
   prevTime = 0;
   tiltPos = tiltMin;
   panPos = panMin;
-  manualMode = true;
+  manualMode = false;
+  tiltNoiseValue = inoise8(tiltOffset);
+  tiltPos = constrain(map(tiltNoiseValue, noiseMin, noiseMax, tiltMin, tiltMax), tiltMin, tiltMax);
+  panNoiseValue = inoise8(tiltOffset);
+  panPos = constrain(map(panNoiseValue, noiseMin, noiseMax, panMin, panMax), panMin, panMax);
 }
 
 
-
 void loop() {
-  // read the joyStick
-  joyX = map(analogRead(joyXPin), 0, 1023, -512, 512);
-  joyY = map(analogRead(joyYPin), 0, 1023, -512, 512);
+  // decide if in manualMode
+  if (manualMode) {
+    // read the joyStick
+    joyX = map(analogRead(joyXPin), 0, 1023, -512, 512);
+    joyY = map(analogRead(joyYPin), 0, 1023, -512, 512);
 
-  // print them out every printEvery milliseconds
-  printJoystick();
-  shiftByJoystick();
+    // print them out every printEvery milliseconds
+    printJoystick();
+    shiftByJoystick();
+  } else {
+    tiltNoiseValue = inoise8(tiltOffset);
+    tiltPos = constrain(map(tiltNoiseValue, noiseMin, noiseMax, tiltMin, tiltMax), tiltMin, tiltMax);
+    panNoiseValue = inoise8(tiltOffset);
+    panPos = constrain(map(panNoiseValue, noiseMin, noiseMax, panMin, panMax), panMin, panMax);
+    tiltOffset += tiltIncrement;
+    panOffset += panIncrement;
+    pan.write(panPos);
+    delay(15);
+    tilt.write(tiltPos);
+    delay(15);
+    //    Serial.print("TiltNoiseValue\t");
+    //    Serial.print(tiltNoiseValue);
+    //    Serial.print("...TiltPos:\t");
+    //    Serial.print(tiltPos);
+    //    Serial.print("...PanNoiseValue:\t");
+    //    Serial.print(panNoiseValue);
+    //    Serial.print("...PanPos:\t");
+    //    Serial.println(panPos);
+  }
 
 }
 
@@ -69,20 +103,20 @@ void shiftByJoystick() {
 
 
 void shiftServo(int servo, int dir) {
-  switch(servo){
-      case 0:
-        tiltPos += dir;
-        constrain(tiltPos, tiltMin, tiltLim);
-        tilt.write(tiltPos);
-        delay(15);
-        break;
-      case 1:
-        panPos += dir;
-        constrain(panPos, panMin, panLim);
-        pan.write(panPos);
-        delay(15);
-        break;
-    }
+  switch (servo) {
+    case 0:
+      tiltPos += dir;
+      constrain(tiltPos, tiltMin, tiltMax);
+      tilt.write(tiltPos);
+      delay(15);
+      break;
+    case 1:
+      panPos += dir;
+      constrain(panPos, panMin, panMax);
+      pan.write(panPos);
+      delay(15);
+      break;
+  }
 
 }
 
