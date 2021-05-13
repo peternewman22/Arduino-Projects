@@ -9,9 +9,17 @@ const int joyYPin = A3;
 const int switchPin = 8;
 const int printEvery = 500;
 const int tiltMin = 10;
-const int tiltMax = 135;
+const int tiltMax = 90;
 const int panMin = 10;
 const int panMax = 170;
+
+// eye timing
+const int eyeL = 2;
+const int eyeR = 4;
+boolean eyesOpen = true;
+const int eyesOpenDuration = 10000;
+const int eyesClosedDuration = 1000;
+
 int joyX, joyY;
 long currentTime;
 long prevTime;
@@ -42,6 +50,8 @@ void setup() {
   joyX = 0;
   joyY = 0;
   currentTime = 0;
+  pinMode(eyeL,OUTPUT);
+  pinMode(eyeR,OUTPUT);
   prevTime = 0;
   tiltPos = tiltMin;
   panPos = panMin;
@@ -50,6 +60,8 @@ void setup() {
   tiltPos = constrain(map(tiltNoiseValue, noiseMin, noiseMax, tiltMin, tiltMax), tiltMin, tiltMax);
   panNoiseValue = inoise8(tiltOffset);
   panPos = constrain(map(panNoiseValue, noiseMin, noiseMax, panMin, panMax), panMin, panMax);
+  digitalWrite(eyeL,HIGH);
+  digitalWrite(eyeR,HIGH);
 }
 
 
@@ -74,17 +86,20 @@ void loop() {
     delay(15);
     tilt.write(tiltPos);
     delay(15);
-    //    Serial.print("TiltNoiseValue\t");
-    //    Serial.print(tiltNoiseValue);
-    //    Serial.print("...TiltPos:\t");
-    //    Serial.print(tiltPos);
-    //    Serial.print("...PanNoiseValue:\t");
-    //    Serial.print(panNoiseValue);
-    //    Serial.print("...PanPos:\t");
-    //    Serial.println(panPos);
+//    printAutoData();
   }
-
 }
+
+void printAutoData(){
+      Serial.print("TiltNoiseValue\t");
+        Serial.print(tiltNoiseValue);
+        Serial.print("...TiltPos:\t");
+        Serial.print(tiltPos);
+        Serial.print("...PanNoiseValue:\t");
+        Serial.print(panNoiseValue);
+        Serial.print("...PanPos:\t");
+        Serial.println(panPos);
+  }
 
 void shiftByJoystick() {
   if (joyX == -512) {
